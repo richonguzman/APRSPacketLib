@@ -19,7 +19,7 @@
   "license": "MIT",
   "homepage": "",
   "dependencies": {},
-  "frameworks": "*",
-  "platforms": "*",
+  "frameworks": ["arduino"],
+  "platforms": ["espressif32", "nordicnrf52"],
   "headers": "APRSPacketLib.h"
 }
