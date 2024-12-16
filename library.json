@@ -1,25 +1,23 @@
 {
-  "name": "APRSPacketLib",
-  "version": "0.0.4",
-  "description": "APRS Packet Library to encode and decode many packet formats",
-  "keywords": "APRS, LoRaAPRS, LoRa, HamRadio, Radio",
-  "repository":
-  {
-    "type": "git",
-    "url": "https://github.com/richonguzman/APRSPacketLib.git"
-  },
-  "authors":
-  [
-    {
-      "name": "Ricardo Guzman",
-      "email": "richon2001@hotmail.com",
-      "maintainer": true
-    }
-  ],
-  "license": "MIT",
-  "homepage": "",
-  "dependencies": {},
-  "frameworks": ["arduino"],
-  "platforms": ["espressif32", "nordicnrf52"],
-  "headers": "APRSPacketLib.h"
+    "name": "APRSPacketLib",
+    "version": "0.0.5",
+    "description": "APRS Packet Library to encode and decode many packet formats",
+    "keywords": "APRS, LoRaAPRS, LoRa, HamRadio, Radio",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/richonguzman/APRSPacketLib.git"
+    },
+    "authors": [
+        {
+            "name": "Ricardo Guzman",
+            "email": "richon2001@hotmail.com",
+            "maintainer": true
+        }
+    ],
+    "license": "MIT",
+    "homepage": "https://github.com/richonguzman/APRSPacketLib",
+    "dependencies": {},
+    "frameworks": ["arduino"],
+    "platforms": ["espressif32", "nordicnrf52"],
+    "headers": "APRSPacketLib.h"
 }
