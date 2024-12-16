@@ -1,0 +1,25 @@
+{
+  "name": "APRSPacketLib",
+  "version": "0.0.1",
+  "description": "APRS Packet Library to encode and decode many packet formats",
+  "keywords": "APRS, LoRaAPRS, LoRa, HamRadio, Radio",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/richonguzman/APRSPacketLib.git"
+  },
+  "authors":
+  [
+    {
+      "name": "Ricardo Guzman",
+      "email": "richon2001@hotmail.com",
+      "maintainer": true
+    }
+  ],
+  "license": "MIT",
+  "homepage": "",
+  "dependencies": {},
+  "frameworks": "*",
+  "platforms": "*",
+  "headers": "APRSPacketLib.h"
+}
