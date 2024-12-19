@@ -1,6 +1,6 @@
 {
     "name": "APRSPacketLib",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "description": "APRS Packet Library to encode and decode many packet formats",
     "keywords": "APRS, LoRaAPRS, LoRa, HamRadio, Radio",
     "repository": {
