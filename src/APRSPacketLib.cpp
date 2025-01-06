@@ -132,11 +132,7 @@ namespace APRSPacketLib {
                 Alt1 = 0;
                 Alt2 = 0;
             }
-            if (sendStandingUpdate) {
-                encodedData += " ";
-            } else {
-                encodedData += char(Alt1 + 33);
-            }
+            encodedData += char(Alt1 + 33);
             encodedData += char(Alt2 + 33);
             encodedData += char(0x30 + 33);
         } else {                      // ... just send Course and Speed
