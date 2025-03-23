@@ -204,11 +204,8 @@ namespace APRSPacketLib {
     }
 
     int decodeCourse(const String& course) {
-        if (course == "..." || course == "000") {
-            return 0;
-        } else { 
-            return course.toInt();
-        }
+        if (course == "..." || course == "000") return 0;
+        return course.toInt();
     }
 
     int decodeSpeed(const String& speed) {
