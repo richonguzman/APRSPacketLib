@@ -154,18 +154,18 @@ namespace APRSPacketLib {
     }
 
     float decodeBase91EncodedLatitude(const String& encodedLatitude) {
-        int Y1 = encodedLatitude[0]) - 33;
-        int Y2 = encodedLatitude[1]) - 33;
-        int Y3 = encodedLatitude[2]) - 33;
-        int Y4 = encodedLatitude[3]) - 33;
+        int Y1 = encodedLatitude[0] - 33;
+        int Y2 = encodedLatitude[1] - 33;
+        int Y3 = encodedLatitude[2] - 33;
+        int Y4 = encodedLatitude[3] - 33;
         return (90.0 - (((Y1 * pow(91,3)) + (Y2 * pow(91,2)) + (Y3 * 91) + Y4) / 380926.0));
     }
 
     float decodeBase91EncodedLongitude(const String& encodedLongitude) {
-        int X1 = encodedLongitude[0]) - 33;
-        int X2 = encodedLongitude[1]) - 33;
-        int X3 = encodedLongitude[2]) - 33;
-        int X4 = encodedLongitude[3]) - 33;
+        int X1 = encodedLongitude[0] - 33;
+        int X2 = encodedLongitude[1] - 33;
+        int X3 = encodedLongitude[2] - 33;
+        int X4 = encodedLongitude[3] - 33;
         return (-180.0 + (((X1 * pow(91,3)) + (X2 * pow(91,2)) + (X3 * 91) + X4) / 190463.0));
     }
 
