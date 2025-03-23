@@ -186,29 +186,21 @@ namespace APRSPacketLib {
     }
 
     float decodeLatitude(const String& Latitude) {
-        String firstLatPart     = Latitude.substring(0,2);
-        String secondLatPart    = Latitude.substring(2,4);
-        String thirdLatPart     = Latitude.substring(Latitude.indexOf(".")+1,Latitude.indexOf(".")+3);
-        float convertedLatitude = firstLatPart.toFloat() + (secondLatPart.toFloat()/60) + (thirdLatPart.toFloat()/(60*100));
-        String LatSign          = String(Latitude[7]);
-        if (LatSign == "S") {
-            return -convertedLatitude;;
-        } else {
-            return convertedLatitude;
-        }
+        int latitudeDotIndex        = Latitude.indexOf(".");
+        float convertedLatitude     = Latitude.substring(0,2).toFloat();
+        convertedLatitude += Latitude.substring(2,4).toFloat() / 60;
+        convertedLatitude += Latitude.substring(latitudeDotIndex + 1, latitudeDotIndex + 3).toFloat() / (60*100);
+        if (Latitude.endsWith("S")) return convertedLatitude;
+        return -convertedLatitude;
     }
 
     float decodeLongitude(const String& Longitude) {
-        String firstLngPart       = Longitude.substring(0,3);
-        String secondLngPart      = Longitude.substring(3,5);
-        String thirdLngPart       = Longitude.substring(Longitude.indexOf(".") + 1, Longitude.indexOf(".") + 3);
-        float convertedLongitude  = firstLngPart.toFloat() + (secondLngPart.toFloat()/60) + (thirdLngPart.toFloat()/(60 * 100));
-        String LngSign            = String(Longitude[8]);
-        if (LngSign == "W") {
-            return -convertedLongitude;
-        } else {
-            return convertedLongitude;
-        }
+        int longitudeDotIndex       = Longitude.indexOf(".");
+        float convertedLongitude    = Longitude.substring(0,3).toFloat();
+        convertedLongitude += Longitude.substring(3,5).toFloat() / 60;
+        convertedLongitude += Longitude.substring(longitudeDotIndex + 1, longitudeDotIndex + 3).toFloat() / (60*100);
+        if (Longitude.endsWith("W")) return -convertedLongitude;
+        return convertedLongitude;
     }
 
     int decodeCourse(const String& course) {
