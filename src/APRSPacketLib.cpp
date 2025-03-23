@@ -561,14 +561,18 @@ namespace APRSPacketLib {
             aprsPacket.path     = temp1.substring(temp1.indexOf(",") + 1, temp1.indexOf(":"));
         }
 
-        if (temp0.indexOf(":!") > 10 || temp0.indexOf(":=") > 10 ) {
+        if (temp0.indexOf(":=") > 10 || temp0.indexOf(":!") > 10 || temp0.indexOf(":@") > 10 ) {
             aprsPacket.type = 0;
             String gpsChars = ":=";
+            int gpsCharsOffset = 2;
             if (temp0.indexOf(":!") > 10) gpsChars = ":!";
-
+            if (temp0.indexOf(":@") > 10) {
+                gpsChars = ":@";
+                gpsCharsOffset = 9;
+            }
             int gpsCharsIndex       = temp0.indexOf(gpsChars);
-            aprsPacket.payload      = temp0.substring(gpsCharsIndex + 2);
-            int encodedBytePosition = gpsCharsIndex + 14;
+            aprsPacket.payload      = temp0.substring(gpsCharsIndex + gpsCharsOffset);
+            int encodedBytePosition = gpsCharsIndex + gpsCharsOffset + 12;
             char currentChar        = temp0[encodedBytePosition];
             if (currentChar == 'G' || currentChar == 'Q' || currentChar == '[' || currentChar == 'H' || currentChar == 'X') {   //  Base91 Encoding
                 aprsPacket.latitude     = decodeBase91EncodedLatitude(temp0.substring(gpsCharsIndex + 3, gpsCharsIndex + 7));
@@ -585,21 +589,21 @@ namespace APRSPacketLib {
                         aprsPacket.altitude = decodeBase91EncodedAltitude(temp0.substring(gpsCharsIndex + 12, gpsCharsIndex + 14));
                         aprsPacket.course   = 0;
                         aprsPacket.speed    = 0;
-                    } else { // normal csT
+                    } else { // normal csT ('G' or '[')
                         aprsPacket.course   = decodeBase91EncodedCourse(temp0.substring(gpsCharsIndex + 12, gpsCharsIndex + 13));
                         aprsPacket.speed    = decodeBase91EncodedSpeed(temp0.substring(gpsCharsIndex + 13, gpsCharsIndex + 14));
                         aprsPacket.altitude = 0;
                     }
                 }
             } else {    //  Degrees and Decimal Minutes
-                aprsPacket.latitude     = decodeLatitude(temp0.substring(gpsCharsIndex + 2, gpsCharsIndex + 10));
-                aprsPacket.longitude    = decodeLongitude(temp0.substring(gpsCharsIndex + 11, gpsCharsIndex + 20));
-                aprsPacket.symbol       = temp0.substring(gpsCharsIndex + 20, gpsCharsIndex + 21);
-                aprsPacket.overlay      = temp0.substring(gpsCharsIndex + 10, gpsCharsIndex + 11);
-                if (temp0.substring(gpsCharsIndex + 24, gpsCharsIndex + 25) == "/" && temp0.substring(gpsCharsIndex + 28, gpsCharsIndex + 31) == "/A=") {
-                    aprsPacket.course   = decodeCourse(temp0.substring(gpsCharsIndex + 21, gpsCharsIndex + 24));
-                    aprsPacket.speed    = decodeSpeed(temp0.substring(gpsCharsIndex + 25, gpsCharsIndex + 28));
-                    aprsPacket.altitude = decodeAltitude(temp0.substring(gpsCharsIndex + 31, gpsCharsIndex + 39));
+                aprsPacket.latitude     = decodeLatitude(temp0.substring(gpsCharsIndex + gpsCharsOffset, gpsCharsIndex + gpsCharsOffset + 8));
+                aprsPacket.longitude    = decodeLongitude(temp0.substring(gpsCharsIndex + gpsCharsOffset + 9, gpsCharsIndex + gpsCharsOffset + 18));
+                aprsPacket.symbol       = temp0.substring(gpsCharsIndex + gpsCharsOffset + 18, gpsCharsIndex + gpsCharsOffset+ 19);
+                aprsPacket.overlay      = temp0.substring(gpsCharsIndex + gpsCharsOffset + 8, gpsCharsIndex + gpsCharsOffset + 9);
+                if (temp0.substring(gpsCharsIndex + gpsCharsOffset + 22, gpsCharsIndex + gpsCharsOffset + 23) == "/" && temp0.substring(gpsCharsIndex + gpsCharsOffset + 26, gpsCharsIndex +  gpsCharsOffset + 29) == "/A=") {
+                    aprsPacket.course   = decodeCourse(temp0.substring(gpsCharsIndex + gpsCharsOffset + 19, gpsCharsIndex + gpsCharsOffset + 22));
+                    aprsPacket.speed    = decodeSpeed(temp0.substring(gpsCharsIndex + gpsCharsOffset + 23, gpsCharsIndex + gpsCharsOffset + 26));
+                    aprsPacket.altitude = decodeAltitude(temp0.substring(gpsCharsIndex + gpsCharsOffset + 29, gpsCharsIndex + gpsCharsOffset + 37));
                 } else {
                     aprsPacket.course   = 0;
                     aprsPacket.speed    = 0;
