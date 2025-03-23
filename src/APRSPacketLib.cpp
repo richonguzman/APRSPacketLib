@@ -150,7 +150,7 @@ namespace APRSPacketLib {
     }
 
     String generateBase91GPSBeaconPacket(const String& callsign, const String& tocall, const String& path, const String& overlay, const String& gps) {
-        return generateBasePacket(callsign,tocall,path) + ":!" + overlay + gps;
+        return generateBasePacket(callsign,tocall,path) + ":=" + overlay + gps;
     }
 
     float decodeBase91EncodedLatitude(const String& encodedLatitude) {
