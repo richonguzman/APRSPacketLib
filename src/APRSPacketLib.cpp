@@ -91,7 +91,7 @@ namespace APRSPacketLib {
         return(s);
     }
 
-    String encodeGPSIntoBase91(float latitude, float longitude, float course, float speed, const String& symbol, bool sendAltitude, int altitude, bool sendStandingUpdate, const String& packetType) {
+    String encodeGPSIntoBase91(float latitude, float longitude, float course, float speed, const String& symbol, bool sendAltitude, int altitude, bool sendStandingUpdate) {
         String encodedData;
         uint32_t aprs_lat, aprs_lon;
         aprs_lat = 900000000 - latitude * 10000000;
@@ -116,11 +116,8 @@ namespace APRSPacketLib {
         for (i = 0; i < 4; i++) {
             encodedData += helper_base91[i];
         }
-        if (packetType == "Wx") {
-            encodedData += "_";
-        } else {
-            encodedData += symbol;
-        }
+
+        encodedData += symbol;
 
         if (sendAltitude) {           // Send Altitude or... (APRS calculates Speed also)
             int Alt1, Alt2;
