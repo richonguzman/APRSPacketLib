@@ -45,7 +45,7 @@ namespace APRSPacketLib {
 
     String  generateDigipeatedPacket(const String& packet, const String &callsign, const String& path);
 
-    String  encodeGPSIntoBase91(float latitude, float longitude, float course, float speed, const String& symbol, bool sendAltitude = false, int altitude = 0, bool sendStandingUpdate = false, const String& packetType = "GPS");
+    String  encodeGPSIntoBase91(float latitude, float longitude, float course, float speed, const String& symbol, bool sendAltitude = false, int altitude = 0, bool sendStandingUpdate = false);
     String  generateBase91GPSBeaconPacket(const String& callsign, const String& tocall, const String& path, const String& overlay, const String& gpsData);
 
     String  generateMiceGPSBeaconPacket(const String& miceMsgType, const String& callsign, const String& symbol, const String& overlay, const String& path, float latitude, float longitude, float course, float speed, int altitude);
