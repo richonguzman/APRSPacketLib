@@ -1,2 +1,2 @@
 # APRSPacketLib
-APRS Packet Lib
+APRS Packet Library for LoRa APRS Firmware
