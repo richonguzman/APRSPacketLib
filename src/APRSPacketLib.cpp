@@ -31,6 +31,14 @@ _______________________________________________*/
 
 namespace APRSPacketLib {
 
+    bool validateMicE(const String& micE) {
+        return micE == "111" || micE == "110" || micE == "101" || micE == "100" || micE == "011" || micE == "010" || micE == "001" || micE == "000";
+    }
+
+    bool checkNocall(const String& callsign) {
+        return callsign.indexOf("NOCALL") != -1 || callsign.indexOf("N0CALL") != -1;
+    }
+
     String generateBasePacket(const String& callsign, const String& tocall, const String& path) {
         String packet = callsign;
         packet += ">";
@@ -669,5 +677,7 @@ namespace APRSPacketLib {
 
         return aprsPacket;
     }
+
+    
 
 }
