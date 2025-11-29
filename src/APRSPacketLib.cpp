@@ -99,7 +99,32 @@ namespace APRSPacketLib {
         return(s);
     }
 
-    String encodeGPSIntoBase91(float latitude, float longitude, float course, float speed, const String& symbol, bool sendAltitude, int altitude, bool sendStandingUpdate) {
+    float applyAmbiguity(float coordinate, int ambiguityLevel) {
+        if (ambiguityLevel <= 0) return coordinate;
+
+        int decimals;
+        switch (ambiguityLevel) {
+            case 1:
+                decimals = 3;  // ~110 m
+                break;
+            case 2:
+                decimals = 2;  // ~1.1 km
+                break;
+            case 3:
+                decimals = 1;  // ~11 km
+                break;
+            default:
+                return coordinate; // comportamiento seguro
+        }
+        float factor = pow(10, decimals);
+        return round(coordinate * factor) / factor;
+    }
+
+    String encodeGPSIntoBase91(float latitude, float longitude, float course, float speed, const String& symbol, bool sendAltitude, int altitude, bool sendStandingUpdate, int ambiguityLevel) {
+        if (ambiguityLevel > 0) {
+            latitude = applyAmbiguity(latitude, ambiguityLevel);
+            longitude = applyAmbiguity(longitude, ambiguityLevel);
+        }
         String encodedData;
         uint32_t aprs_lat, aprs_lon;
         aprs_lat = 900000000 - latitude * 10000000;
@@ -502,7 +527,11 @@ namespace APRSPacketLib {
         return miceLongitudeStruct;
     }
 
-    String generateMiceGPSBeaconPacket(const String& miceMsgType, const String& callsign, const String& symbol, const String& overlay, const String& path, float latitude, float longitude, float course, float speed, int altitude) {
+    String generateMiceGPSBeaconPacket(const String& miceMsgType, const String& callsign, const String& symbol, const String& overlay, const String& path, float latitude, float longitude, float course, float speed, int altitude, int ambiguityLevel) {
+        if (ambiguityLevel > 0) {
+            latitude = applyAmbiguity(latitude, ambiguityLevel);
+            longitude = applyAmbiguity(longitude, ambiguityLevel);
+        }        
         gpsLatitudeStruct latitudeStruct    = gpsDecimalToDegreesMiceLatitude(latitude);
         gpsLongitudeStruct longitudeStruct  = gpsDecimalToDegreesMiceLongitude(longitude);
 
