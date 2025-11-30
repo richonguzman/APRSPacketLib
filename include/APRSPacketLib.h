@@ -53,6 +53,9 @@ namespace APRSPacketLib {
     String  encodeGPSIntoBase91(float latitude, float longitude, float course, float speed, const String& symbol, bool sendAltitude = false, int altitude = 0, bool sendStandingUpdate = false, int ambiguityLevel = 0);
     String  generateBase91GPSBeaconPacket(const String& callsign, const String& tocall, const String& path, const String& overlay, const String& gpsData);
 
+    float   decodeBase91EncodedLatitude(const String& encodedLatitude);
+    float   decodeBase91EncodedLongitude(const String& encodedLongitude);
+
     String  generateMiceGPSBeaconPacket(const String& miceMsgType, const String& callsign, const String& symbol, const String& overlay, const String& path, float latitude, float longitude, float course, float speed, int altitude, int ambiguityLevel = 0);
 
     APRSPacket processReceivedPacket(const String& receivedPacket, int rssi, float snr, int freqError);
