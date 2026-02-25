@@ -36,8 +36,8 @@ const String SYMBOL   = ">";    // car
 float latitude  =  33.7854;   //  33.7854 N
 float longitude = -70.6239;   // -70.6239 W (negative = West)
 float course    = 180.0;      // degrees (0-359)
-float speed     = 45.0;       // km/h
-int   altitude  = 520;        // meters
+float speed     = 10.0;       // knots/hr
+int   altitude  = 520;        // feet
 
 // -----------------------------------------------
 
@@ -73,7 +73,7 @@ void setup() {
         0, 0,
         SYMBOL,
         true,      // sendAltitude = true
-        altitude,  // altitude in meters
+        altitude,  // altitude in feet
         false,
         0
         );

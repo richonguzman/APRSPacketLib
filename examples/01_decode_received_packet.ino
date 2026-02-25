@@ -75,8 +75,8 @@ void decodeAndPrint(const String& raw, const String& label) {
         Serial.println("  Latitude  : " + String(p.latitude, 6));
         Serial.println("  Longitude : " + String(p.longitude, 6));
         Serial.println("  Course    : " + String(p.course) + " deg");
-        Serial.println("  Speed     : " + String(p.speed) + " km/h");
-        Serial.println("  Altitude  : " + String(p.altitude) + " m");
+        Serial.println("  Speed     : " + String(p.speed) + " knots/h");
+        Serial.println("  Altitude  : " + String(p.altitude) + " feet");
         Serial.println("  Symbol    : " + p.symbol);
         Serial.println("  Overlay   : " + p.overlay);
     }

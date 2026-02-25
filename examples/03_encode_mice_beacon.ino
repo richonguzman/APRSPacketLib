@@ -43,8 +43,8 @@ const String OVERLAY = "/";
 float latitude  =  33.7854;   //  N
 float longitude = -70.6239;   //  W
 float course    = 270.0;      // degrees
-float speed     = 60.0;       // km/h
-int   altitude  = 750;        // meters
+float speed     = 20.0;       // knots/h
+int   altitude  = 750;        // feet
 
 // -----------------------------------------------
 
