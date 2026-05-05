@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to coding assistant agents when working with code in this repository.
 
 ## Repository purpose
 
@@ -69,6 +69,14 @@ Two non-obvious gotchas in this path:
 ### Coordinate ambiguity
 
 `applyAmbiguity(coord, level)` rounds lat/lon to 3, 2, or 1 decimal places (~110 m / 1.1 km / 11 km). It is applied in both `encodeGPSIntoBase91` and `generateMiceGPSBeaconPacket` before encoding. Any new beacon generator should apply ambiguity at the same point in the pipeline (before integer/byte encoding) for parity.
+
+**This is not the APRS101 spec mechanism.** The spec defines ambiguity for the uncompressed `DDMM.hh` format as character-blanking (trailing chars replaced with spaces, both lat and lon) and for Mic-E as `Z`-char masking in the destination address (A.1.1.6). The compressed Base91 format has no defined ambiguity mechanism. Rounded-decimal output decodes as an exact (off-grid) position with no on-wire indicator that ambiguity was requested. Additionally, `level == 4` falls into the `default:` branch and returns the input unchanged — `level` validation should treat 4 as a real spec-defined level (mask tens of minute) once a fix lands.
+
+### Known decoder hazards
+
+`decodeBase91EncodedCourse(const String&)` and `decodeBase91EncodedSpeed(const String&)` call `course.toInt()` / `speed.toInt()` on the single-char input. Arduino's `String::toInt()` returns `0` whenever the leading char is non-numeric, which is the case for nearly every legal encoded byte (range `'!'..'{'`, ASCII 33..123 — only `'0'..'9'` parse). The resulting decoded values are `(0 - 33) * 4 = -132` for course and `~0` for speed for almost all real packets. The intended formulas are `((int)str[0] - 33) * 4` and `pow(1.08, (int)str[0] - 33) - 1`. `decodeBase91EncodedAltitude` and `decodeBase91EncodedLatitude` / `…Longitude` already use the correct `(int)char[0] - 33` form.
+
+This affects `processReceivedPacket` for any compressed-format packet routed into the `'G'`/`'['` (course+speed) branch. The `LoRa_APRS_Tracker` consumer doesn't notice because it transmits but never decodes its own beacons; gateways and RX-side users do.
 
 ### Digipeating
 
