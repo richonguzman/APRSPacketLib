@@ -141,4 +141,8 @@ void setup(void) {
     run_all();
     UNITY_END();
 }
+
+void loop(void) {
+    delay(1000);
+}
 #endif
