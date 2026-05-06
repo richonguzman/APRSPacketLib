@@ -36,7 +36,7 @@ static void test_decode_course_against_spec_vectors(void) {
         int got = APRSPacketLib::decodeBase91EncodedCourse(String(v.encoded));
         char msg[64];
         snprintf(msg, sizeof(msg),
-                 "byte 0x%02X expected %d°", (unsigned char)v.encoded, v.course_deg);
+                 "byte 0x%02X expected %d degrees", (unsigned char)v.encoded, v.course_deg);
         TEST_ASSERT_EQUAL_INT_MESSAGE(v.course_deg, got, msg);
     }
 }
