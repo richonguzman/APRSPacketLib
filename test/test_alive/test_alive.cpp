@@ -27,4 +27,8 @@ void setup(void) {
     RUN_TEST(test_alive);
     UNITY_END();
 }
+
+void loop(void) {
+    delay(1000);
+}
 #endif
