@@ -200,11 +200,11 @@ namespace APRSPacketLib {
     }
 
     int decodeBase91EncodedCourse(const String& course) {
-        return (course.toInt() - 33) * 4;
+        return ((int)course[0] - 33) * 4;
     }
 
     int decodeBase91EncodedSpeed(const String& speed) {
-        return (pow(1.08,(speed.toInt() - 33)) - 1) * 1.852;
+        return (pow(1.08,((int)speed[0] - 33)) - 1) * 1.852;
     }
 
     int decodeBase91EncodedAltitude(const String& altitude) {
