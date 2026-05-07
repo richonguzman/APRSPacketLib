@@ -1,3 +1,4 @@
+#ifndef NATIVE_TEST_BUILD
 #include <Arduino.h>
 #include "unity_config.h"
 
@@ -16,3 +17,4 @@ extern "C" {
         Serial.flush();
     }
 }
+#endif // NATIVE_TEST_BUILD

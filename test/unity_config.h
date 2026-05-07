@@ -1,3 +1,4 @@
+#ifndef NATIVE_TEST_BUILD
 #ifndef UNITY_CONFIG_H
 #define UNITY_CONFIG_H
 
@@ -18,3 +19,4 @@ void unity_output_complete(void);
 #endif
 
 #endif
+#endif // NATIVE_TEST_BUILD
