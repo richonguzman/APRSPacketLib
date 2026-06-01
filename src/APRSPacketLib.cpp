@@ -166,7 +166,13 @@ namespace APRSPacketLib {
             encodedData += char(Alt2 + 33);
             encodedData += char(0x30 + 33);
         } else {                      // ... just send Course and Speed
-            ax25_base91enc(helper_base91, 1, (uint32_t) course/4 );
+            // Wrap to [0, 360) so a caller passing 360 (or drift past it)
+            // encodes as 0; APRS12c §9 caps the c byte at numeric 89
+            // (encoded course 356), so the modulus on the encoded byte is
+            // 90, not 91 — base-91 has 91 digits, but only 90 of them are
+            // legal course values.
+            float c_wrapped = course - 360.0f * floorf(course / 360.0f);
+            ax25_base91enc(helper_base91, 1, (uint32_t)lroundf(c_wrapped / 4.0f) % 90);
             if (sendStandingUpdate) {
                 encodedData += " ";
             } else {

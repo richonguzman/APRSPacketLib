@@ -69,16 +69,14 @@ static void test_encode_course_matches_spec_for_all_fixed_points(void) {
         String out = APRSPacketLib::encodeGPSIntoBase91(
             p.lat_deg, p.lon_deg, (float)p.course_deg, (float)p.speed_kn,
             "/", false, 0, false, 0);
-        if (out.charAt(9) != p.base91_c) {
-            char msg[160];
-            snprintf(msg, sizeof(msg),
-                     "L4 (course truncation): %s course=%d° expected '%c' (0x%02X) "
-                     "got '%c' (0x%02X) — see wip/bug_report_l4_encode_course.md",
-                     p.name, p.course_deg,
-                     p.base91_c, (unsigned char)p.base91_c,
-                     out.charAt(9), (unsigned char)out.charAt(9));
-            TEST_IGNORE_MESSAGE(msg);
-        }
+        char msg[160];
+        snprintf(msg, sizeof(msg),
+                 "L4 (course rounding): %s course=%d° expected '%c' (0x%02X) "
+                 "got '%c' (0x%02X) — see wip/bug_report_l4_encode_course.md",
+                 p.name, p.course_deg,
+                 p.base91_c, (unsigned char)p.base91_c,
+                 out.charAt(9), (unsigned char)out.charAt(9));
+        TEST_ASSERT_EQUAL_CHAR_MESSAGE(p.base91_c, out.charAt(9), msg);
     }
 }
 

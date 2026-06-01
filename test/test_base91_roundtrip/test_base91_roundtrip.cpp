@@ -82,10 +82,15 @@ static void test_lon_roundtrip_grid(void) {
 // ---------- course round-trip ----------
 
 static void test_course_roundtrip_grid(void) {
-    // Encoded c byte stores round(course/4) — courses that are
-    // multiples of 4 round-trip exactly; everything else loses
-    // up to ±2°. The library's `(uint32_t)course/4` truncates,
-    // so even multiples of 4 sometimes drift (L4).
+    // Encoded c byte stores round(course/4) under ties-away rounding
+    // (see wip/bug_report_l4_encode_course.md and gen_aprs_vectors.py's
+    // encode_course). Courses that are multiples of 4 round-trip
+    // exactly; everything else drifts by at most 2°.
+    //
+    // course=359 is the boundary case: round(359/4) = round(89.75) = 90,
+    // which wraps to c=0 (representing 0°/360°). Linear `abs(decoded -
+    // course)` would read that as 359° of drift, so use the shorter
+    // arc on the circle.
     static const int kCourses[] = { 0, 4, 8, 12, 45, 90, 180, 270, 359 };
     for (int course : kCourses) {
         String out = encode_cs(0.0f, 0.0f, (float)course, 0.0f);
@@ -93,16 +98,14 @@ static void test_course_roundtrip_grid(void) {
         if (out.charAt(9) == ' ') continue;
         int decoded = APRSPacketLib::decodeBase91EncodedCourse(
             out.substring(9, 10));
-        // Spec round-trip gives decoded ∈ {course, course±2} after
-        // /4 quantization. The lib's truncation can shift another 4°.
-        if (abs(decoded - course) > 2) {
-            char msg[160];
-            snprintf(msg, sizeof(msg),
-                     "L4: course in=%d out=%d delta=%d — see "
-                     "wip/bug_report_l4_encode_course.md",
-                     course, decoded, abs(decoded - course));
-            TEST_IGNORE_MESSAGE(msg);
-        }
+        int linear = abs(decoded - course);
+        int circular = linear <= 180 ? linear : 360 - linear;
+        char msg[160];
+        snprintf(msg, sizeof(msg),
+                 "L4: course in=%d out=%d circular_delta=%d — see "
+                 "wip/bug_report_l4_encode_course.md",
+                 course, decoded, circular);
+        TEST_ASSERT_TRUE_MESSAGE(circular <= 2, msg);
     }
 }
 
