@@ -42,6 +42,7 @@ namespace APRSPacketLib {
 
     bool    validateMicE(const String& micE);
     bool    checkNocall(const String& callsign);
+    String  checkForStartingBytes(const String& packet);
 
     String  generateBasePacket(const String& callsign, const String& tocall, const String& path);
 

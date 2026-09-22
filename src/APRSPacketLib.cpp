@@ -21,7 +21,7 @@
                ███████╗██║██████╔╝
                ╚══════╝╚═╝╚═════╝
 
-             Ricardo Guzman - CA2RXU 
+             Ricardo Guzman - CA2RXU
 https://github.com/richonguzman/LoRa_APRS_Tracker
    (donations : http://paypal.me/richonguzman)
 _______________________________________________*/
@@ -37,6 +37,15 @@ namespace APRSPacketLib {
 
     bool checkNocall(const String& callsign) {
         return callsign.indexOf("NOCALL") != -1 || callsign.indexOf("N0CALL") != -1;
+    }
+
+    // Defensive trim: if the LoRa RF frame marker (\x3c\xff\x01) turns up
+    // anywhere inside a payload/message (corruption, or a crafted string
+    // trying to inject a fake "start of packet"), cut there instead of
+    // passing it through.
+    String checkForStartingBytes(const String& packet) {
+        int index = packet.indexOf("\x3c\xff\x01");
+        return (index != -1) ? packet.substring(0, index) : packet;
     }
 
     String generateBasePacket(const String& callsign, const String& tocall, const String& path) {
@@ -60,7 +69,7 @@ namespace APRSPacketLib {
             processedAddressee += ' ';
         }
         String processedMessage = message;
-        processedMessage.trim();            
+        processedMessage.trim();
         return generateBasePacket(callsign,tocall,path) + "::" + processedAddressee + ":" + processedMessage;
     }
 
@@ -329,7 +338,7 @@ namespace APRSPacketLib {
             if (i == 3) {
                 gpsLat += ".";
                 if (currentChar > '9') northSouth = "N";        // ???? para todos?
-            }   
+            }
         }
         gpsLat += northSouth;
         return gpsDegreesToDecimalLatitude(gpsLat);
@@ -359,7 +368,7 @@ namespace APRSPacketLib {
             temp = '0' + temp;
         }
         String longitudeString = temp;
-        
+
         int m28 = (int)informationField[1] - 28;
         if (m28 >= 60) m28 -= 60;
         temp = String(m28);
@@ -368,7 +377,7 @@ namespace APRSPacketLib {
         }
         longitudeString += temp;
         longitudeString += ".";
-            
+
         int h28 = (int)informationField[2] - 28;
         temp = String(h28);
         for (int i = temp.length(); i < 2; i++) {
@@ -384,7 +393,7 @@ namespace APRSPacketLib {
         uint32_t altoff = alt_m + 10000;
         buf[0] = (altoff/8281) + 33;
         altoff = altoff%8281;
-        buf[1] = (altoff/91) + 33;	
+        buf[1] = (altoff/91) + 33;
         buf[2] = (altoff%91) + 33;
         buf[3] = '}';
     }
@@ -408,13 +417,13 @@ namespace APRSPacketLib {
         }
         uint32_t course_hun = course_deg/100;
         DC28    = (speed_kt-ten * 10) * 10 + course_hun + 32;
-        buf[1]  = DC28;				
+        buf[1]  = DC28;
 
         SE28    = (course_deg - course_hun * 100) + 28;
         buf[2]  = SE28;
     }
 
-    void encodeMiceLongitude(uint8_t *buf, gpsLongitudeStruct *lon) { 
+    void encodeMiceLongitude(uint8_t *buf, gpsLongitudeStruct *lon) {
         uint32_t deg = lon->degrees;
         uint32_t d28 = 28 + (deg - 100);    // degrees
         if (deg <= 9) {
@@ -425,12 +434,12 @@ namespace APRSPacketLib {
             d28 = 8 + deg;
         }
         buf[0] = d28;
-        
+
         uint32_t min = lon->minutes;
         uint32_t m28 = 28 + min;            // minutes
         if (min <= 9) m28 = 88 + min;
         buf[1] = m28;
-        
+
         uint32_t h28 = 28 + lon->minuteHundredths;
         buf[2] = h28;
     }
@@ -547,7 +556,7 @@ namespace APRSPacketLib {
         if (ambiguityLevel > 0) {
             latitude = applyAmbiguity(latitude, ambiguityLevel);
             longitude = applyAmbiguity(longitude, ambiguityLevel);
-        }        
+        }
         gpsLatitudeStruct latitudeStruct    = gpsDecimalToDegreesMiceLatitude(latitude);
         gpsLongitudeStruct longitudeStruct  = gpsDecimalToDegreesMiceLongitude(longitude);
 
@@ -566,7 +575,7 @@ namespace APRSPacketLib {
         miceInfoFieldArray[7] = symbolOverlayArray[0];
         strncpy(symbolOverlayArray,overlay.c_str(),1);
         miceInfoFieldArray[8] = symbolOverlayArray[0];
-        
+
         encodeMiceAltitude(&miceInfoFieldArray[9], (uint32_t)altitude); // altitude = gps.altitude.meters()
         miceInfoFieldArray[13] = 0x00;      // por repetidor?
         String miceInformationField = (char*)miceInfoFieldArray;
@@ -587,12 +596,13 @@ namespace APRSPacketLib {
 
     APRSPacket processReceivedPacket(const String& receivedPacket, int rssi, float snr, int freqError) {
         /*  Packet type:
-            gps       = 0
-            message   = 1
-            status    = 2
-            telemetry = 3
-            mic-e     = 4
-            object    = 5   */
+            gps             = 0
+            message         = 1
+            status          = 2
+            telemetry       = 3
+            mic-e           = 4
+            object          = 5
+            unrecognized    = 6   */
         APRSPacket aprsPacket;
 
         aprsPacket.header = "";
@@ -604,7 +614,7 @@ namespace APRSPacketLib {
         }
 
         aprsPacket.sender   = temp0.substring(0, temp0.indexOf(">"));
-        
+
         String temp1 = temp0.substring(temp0.indexOf(">") + 1, temp0.indexOf(":"));
         aprsPacket.tocall   = temp1;
         aprsPacket.path     = "";
@@ -624,7 +634,6 @@ namespace APRSPacketLib {
             }
             int gpsCharsIndex       = temp0.indexOf(gpsChars);
             int payloadOffset       = gpsCharsIndex + gpsCharsOffset;
-            aprsPacket.payload      = temp0.substring(payloadOffset);
 
             // Spec-based: the symbol table id (byte 0 of the position data) is the
             // only reliable discriminator between compressed and uncompressed
@@ -639,6 +648,14 @@ namespace APRSPacketLib {
             bool isCompressed = (symbolTableChar == '/' || symbolTableChar == '\\' ||
                                   (symbolTableChar >= 'A' && symbolTableChar <= 'Z') ||
                                   (symbolTableChar >= 'a' && symbolTableChar <= 'j'));
+
+            // payload ends up holding just the free-text comment -- the fixed-width
+            // position/symbol/course/speed/altitude fields are already extracted
+            // below from temp0 directly, so they don't need to survive in payload.
+            // Compressed consumes 13 bytes from payloadOffset (1 symbol table +
+            // 4 lat + 4 lon + 1 symbol + 2 course/speed + 1 compression-type byte).
+            // Uncompressed consumes 19 bytes (8 lat + 1 symbol table + 9 lon + 1 symbol).
+            aprsPacket.payload = temp0.substring(payloadOffset + (isCompressed ? 13 : 19));
 
             if (isCompressed) {   //  Base91 Encoding
                 int encodedBytePosition = payloadOffset + 12;
@@ -711,12 +728,31 @@ namespace APRSPacketLib {
             aprsPacket.longitude    = decodeMiceLongitude(aprsPacket.tocall, aprsPacket.payload);
             aprsPacket.speed        = decodeMiceSpeed(aprsPacket.payload[3], aprsPacket.payload[4]);
             aprsPacket.course       = decodeMiceCourse(aprsPacket.payload[4], aprsPacket.payload[5]);
-            aprsPacket.altitude     = decodeMiceAltitude(aprsPacket.payload);      
+            aprsPacket.altitude     = decodeMiceAltitude(aprsPacket.payload);
+
+            // payload ends up holding just the free-text comment. The fixed
+            // 8-byte block (3 longitude + 3 speed/course + symbol + overlay)
+            // is always present; an optional altitude block (`xxx}, 5 bytes)
+            // follows it when decodeMiceAltitude()'s own marker check matches.
+            int miceCommentStart = 8;
+            if (aprsPacket.payload.indexOf("`") == 8 && aprsPacket.payload.indexOf("}") == 12) {
+                miceCommentStart = 13;
+            }
+            aprsPacket.payload = aprsPacket.payload.substring(miceCommentStart);
         } else if (temp0.indexOf(":;") > 10) {
             aprsPacket.type = 5;
             aprsPacket.payload = temp0.substring(temp0.indexOf(":;") + 2);
+        } else {
+            // Doesn't match any known DTI/pattern above. Previously left
+            // aprsPacket.type unassigned (undefined behavior -- callers
+            // checking e.g. "type == 0" could match by coincidence of
+            // leftover stack memory). Now explicit, and payload carries the
+            // full, uncut original packet so callers have something useful
+            // to show without needing the raw input separately.
+            aprsPacket.type     = 6;
+            aprsPacket.payload  = receivedPacket;
         }
-            
+
         if (aprsPacket.type != 1) aprsPacket.addressee = "";
 
         if (aprsPacket.type != 0 && aprsPacket.type != 4) {
@@ -738,6 +774,6 @@ namespace APRSPacketLib {
         return aprsPacket;
     }
 
-    
+
 
 }
