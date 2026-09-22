@@ -344,6 +344,16 @@ namespace APRSPacketLib {
         String temp;
         int d28 = (int)informationField[0] - 28;
         if (offset) d28 += 100;
+        // APRS101 §10 (Mic-E Longitude Degrees Encoding): the +100 offset
+        // above can push the encoded degree into two reserved 10-degree
+        // bands that must be folded back down -- 180..189 actually means
+        // 100..109, and 190..199 actually means 0..9. Without this, e.g. a
+        // station at 1.37E decodes as 191.37E instead.
+        if (d28 >= 180 && d28 <= 189) {
+            d28 -= 80;
+        } else if (d28 >= 190 && d28 <= 199) {
+            d28 -= 190;
+        }
         temp = String(d28);
         for (int i = temp.length(); i < 3; i++) {
             temp = '0' + temp;
@@ -615,9 +625,24 @@ namespace APRSPacketLib {
             int gpsCharsIndex       = temp0.indexOf(gpsChars);
             int payloadOffset       = gpsCharsIndex + gpsCharsOffset;
             aprsPacket.payload      = temp0.substring(payloadOffset);
-            int encodedBytePosition = payloadOffset + 12;
-            char currentChar        = temp0[encodedBytePosition];
-            if (currentChar == 'G' || currentChar == 'Q' || currentChar == '[' || currentChar == 'H' || currentChar == 'X' || currentChar == 'T') {   //  Base91 Encoding
+
+            // Spec-based: the symbol table id (byte 0 of the position data) is the
+            // only reliable discriminator between compressed and uncompressed
+            // formats. An uncompressed position always starts with a latitude
+            // digit; a compressed one always starts with '/', '\', or an overlay
+            // 'A'-'Z' / 'a'-'j'. The old check instead whitelisted a handful of
+            // observed values of the compression-type byte (offset+12), which is
+            // a free-form base91 byte with ~90 valid values -- so plenty of
+            // conformant compressed packets were falling through to "Degrees and
+            // Decimal Minutes" and getting mis-decoded.
+            char symbolTableChar = temp0[payloadOffset];
+            bool isCompressed = (symbolTableChar == '/' || symbolTableChar == '\\' ||
+                                  (symbolTableChar >= 'A' && symbolTableChar <= 'Z') ||
+                                  (symbolTableChar >= 'a' && symbolTableChar <= 'j'));
+
+            if (isCompressed) {   //  Base91 Encoding
+                int encodedBytePosition = payloadOffset + 12;
+                char currentChar        = temp0[encodedBytePosition];   // still needed below: altitude vs course/speed csT
                 aprsPacket.latitude     = decodeBase91EncodedLatitude(temp0.substring(payloadOffset + 1, payloadOffset + 5));
                 aprsPacket.longitude    = decodeBase91EncodedLongitude(temp0.substring(payloadOffset + 5, payloadOffset + 9));
                 aprsPacket.symbol       = temp0.substring(payloadOffset + 9, payloadOffset + 10);
