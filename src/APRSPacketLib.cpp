@@ -73,6 +73,19 @@ namespace APRSPacketLib {
         return generateBasePacket(callsign,tocall,path) + "::" + processedAddressee + ":" + processedMessage;
     }
 
+    // Converts a station's own packet (built for RF) into the version it uploads to APRS-IS.
+    // aprs-is.net: "Packets originating from the client should only have TCPIP* in the path, nothing more or less"
+    // -- the RF path (WIDE1-1...) is dropped, and no q construct is added: the server appends ",qAC,SERVER" itself.
+    // Only for the station's own packets, not for gating packets heard from others (those use qAR/qAO).
+    String generateAPRSISPacket(const String& packet) {
+        int colonIndex = packet.indexOf(":");               // first ':' always ends the header (callsigns/path never contain ':')
+        if (colonIndex == -1) return packet;
+        String header = packet.substring(0, colonIndex);
+        int commaIndex = header.indexOf(",");
+        if (commaIndex != -1) header = header.substring(0, commaIndex);     // keep only CALL>TOCALL
+        return header + ",TCPIP*" + packet.substring(colonIndex);
+    }
+
     // Exact-token match (comma-delimited), not a raw substring search -- "path" is
     // meant to match a whole hop like "WIDE1-1", and a substring search would also
     // match inside an already-consumed hop like "WIDE1-1*", corrupting it on replace.
@@ -208,8 +221,16 @@ namespace APRSPacketLib {
         return encodedData;
     }
 
+    // APRS101 ch.9: in compressed format the symbol table / overlay is the first byte of the position, and a
+    // digit there would be read as the start of an uncompressed latitude -- so overlay digits 0-9 are sent as a-j.
+    String compressedSymbolTable(const String& overlay) {
+        String symbolTable = overlay;
+        if (symbolTable.length() == 1 && symbolTable[0] >= '0' && symbolTable[0] <= '9') symbolTable.setCharAt(0, symbolTable[0] - '0' + 'a');
+        return symbolTable;
+    }
+
     String generateBase91GPSBeaconPacket(const String& callsign, const String& tocall, const String& path, const String& overlay, const String& gps) {
-        return generateBasePacket(callsign,tocall,path) + ":=" + overlay + gps;
+        return generateBasePacket(callsign,tocall,path) + ":=" + compressedSymbolTable(overlay) + gps;
     }
 
     float decodeBase91EncodedLatitude(const String& encodedLatitude) {

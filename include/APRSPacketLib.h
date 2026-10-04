@@ -48,6 +48,7 @@ namespace APRSPacketLib {
 
     String  generateStatusPacket(const String& callsign, const String& tocall, const String& path, const String& status);
     String  generateMessagePacket(const String& callsign, const String& tocall, const String& path, const String& addressee, const String& message);
+    String  generateAPRSISPacket(const String& packet);
 
     String  generateDigipeatedPacket(const String& packet, const String &callsign, const String& path);
 
