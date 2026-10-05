@@ -48,29 +48,58 @@ namespace APRSPacketLib {
         return (index != -1) ? packet.substring(0, index) : packet;
     }
 
+    // Builds "CALL>TOCALL[,PATH]". The path is cleaned hop by hop: spaces and empty hops are dropped,
+    // so "", "WIDE1-1,", "RFONLY," + "" or " WIDE1-1 , WIDE2-1" all give a valid header.
     String generateBasePacket(const String& callsign, const String& tocall, const String& path) {
-        String packet = callsign;
-        packet += ">";
-        packet += tocall;
-        if (path.indexOf("WIDE") == 0) {
-            packet += ",";
-            packet += path;
+        String packet = callsign + ">" + tocall;
+        unsigned int start = 0;
+        while (start < path.length()) {
+            int end = path.indexOf(",", start);
+            if (end == -1) end = path.length();
+            String hop = path.substring(start, end);
+            hop.trim();
+            if (hop.length() > 0) {
+                packet += ",";
+                packet += hop;
+            }
+            start = end + 1;
         }
         return packet;
     }
 
     String generateStatusPacket(const String& callsign, const String& tocall, const String& path, const String& status) {
-        return generateBasePacket(callsign,tocall,path) + ":>"  + status;
+        return generateBasePacket(callsign, tocall, path) + ":>"  + status;
+    }
+
+    // APRS101 ch.14: the addressee is a fixed 9-character field, padded with spaces (object names use the same field, ch.11)
+    String formatAddressee(const String& addressee) {
+        String formattedAddressee = addressee.substring(0, 9);
+        while (formattedAddressee.length() < 9) formattedAddressee += ' ';
+        return formattedAddressee;
     }
 
     String generateMessagePacket(const String& callsign, const String& tocall, const String& path, const String& addressee, const String& message) {
-        String processedAddressee = addressee;
-        for (int i = addressee.length(); i < 9; i++) {
-            processedAddressee += ' ';
-        }
         String processedMessage = message;
         processedMessage.trim();
-        return generateBasePacket(callsign,tocall,path) + "::" + processedAddressee + ":" + processedMessage;
+        return generateBasePacket(callsign, tocall, path) + "::" + formatAddressee(addressee) + ":" + processedMessage;
+    }
+
+    // Builds the ack text for a received message: "hola{12" -> "ack12", "hola{MM}AA" -> "ackMM}AA" (APRS 1.2c reply-acks).
+    // Returns "" when the message has no message ID (no ack requested, APRS101 ch.14).
+    String generateAckMessage(const String& receivedMessage) {
+        int leftCurlyBraceIndex = receivedMessage.lastIndexOf('{');
+        if (leftCurlyBraceIndex == -1) return "";
+        String messageId = receivedMessage.substring(leftCurlyBraceIndex + 1);
+        messageId.trim();
+        if (messageId.length() == 0) return "";
+        return "ack" + messageId;
+    }
+
+    // Builds the complete ack packet, ready to transmit ("" when no ack was requested)
+    String generateAckPacket(const String& callsign, const String& tocall, const String& path, const String& addressee, const String& receivedMessage) {
+        String ackMessage = generateAckMessage(receivedMessage);
+        if (ackMessage == "") return "";
+        return generateMessagePacket(callsign, tocall, path, addressee, ackMessage);
     }
 
     // Converts a station's own packet (built for RF) into the version it uploads to APRS-IS.
@@ -230,7 +259,7 @@ namespace APRSPacketLib {
     }
 
     String generateBase91GPSBeaconPacket(const String& callsign, const String& tocall, const String& path, const String& overlay, const String& gps) {
-        return generateBasePacket(callsign,tocall,path) + ":=" + compressedSymbolTable(overlay) + gps;
+        return generateBasePacket(callsign, tocall, path) + ":=" + compressedSymbolTable(overlay) + gps;
     }
 
     float decodeBase91EncodedLatitude(const String& encodedLatitude) {

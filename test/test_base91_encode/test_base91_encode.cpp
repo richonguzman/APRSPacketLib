@@ -197,20 +197,15 @@ static void test_beacon_wrapper_no_path_when_path_empty(void) {
     TEST_ASSERT_EQUAL_INT(-1, pkt.indexOf(','));
 }
 
-static void test_beacon_wrapper_only_appends_WIDE_path(void) {
-    // L9 (path filtering): the wrapper currently only appends paths
-    // that start with "WIDE"; "RFONLY" is dropped. Pin the current
-    // behaviour so the divergence is visible in the test report.
+static void test_beacon_wrapper_keeps_non_WIDE_path(void) {
+    // L9 (path filtering), fixed: generateBasePacket() used to append only
+    // paths starting with "WIDE", so "RFONLY" was silently dropped. It now
+    // cleans the path hop by hop and keeps every non-empty hop.
     String gps = APRSPacketLib::encodeGPSIntoBase91(
         48.13863f, 11.57341f, 90.0f, 30.0f, "/", false, 0, false, 0);
     String pkt = APRSPacketLib::generateBase91GPSBeaconPacket(
         "N0CALL-9", "APLRT1", "RFONLY", "/", gps);
-    if (pkt.indexOf("RFONLY") != -1) {
-        // Library has been fixed — flip this assertion to require
-        // the path is present.
-        return;
-    }
-    TEST_IGNORE_MESSAGE("L9 — generateBase91GPSBeaconPacket drops non-WIDE paths");
+    TEST_ASSERT_EQUAL_STRING("N0CALL-9>APLRT1,RFONLY:=/", pkt.substring(0, 25).c_str());
 }
 
 static void run_all(void) {
@@ -227,7 +222,7 @@ static void run_all(void) {
     RUN_TEST(test_encode_altitude_zero_emits_alt_bang_bang);
     RUN_TEST(test_beacon_wrapper_format);
     RUN_TEST(test_beacon_wrapper_no_path_when_path_empty);
-    RUN_TEST(test_beacon_wrapper_only_appends_WIDE_path);
+    RUN_TEST(test_beacon_wrapper_keeps_non_WIDE_path);
 }
 
 #ifdef NATIVE_TEST_BUILD
