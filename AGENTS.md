@@ -7,7 +7,16 @@ This file provides guidance to coding assistant agents when working with code in
 APRSPacketLib is an Arduino/PlatformIO C++ library that encodes and decodes APRS packet formats for LoRa APRS firmware (e.g. the LoRa_APRS_Tracker project). It is consumed as a dependency, not run standalone.
 
 - Library metadata: `library.json` (PlatformIO). Frameworks: `arduino`. Platforms: `espressif32`, `nordicnrf52`.
-- Public header: `include/APRSPacketLib.h`. Implementation: `src/APRSPacketLib.cpp`. Both live under the single `APRSPacketLib` namespace.
+- Public header: `include/APRSPacketLib.h` (the only header the firmware repos include). Everything lives under the single `APRSPacketLib` namespace.
+- Implementation is split by topic under `src/`:
+  - `APRSPacketLib_base.cpp` — packet header / path (`generateBasePacket`), `formatAddressee`, `generateAPRSISPacket`, `checkNocall`, `checkForStartingBytes`.
+  - `APRSPacketLib_messages.cpp` — status, messages, acks.
+  - `APRSPacketLib_base91.cpp` — compressed (Base91) position encode/decode, `applyAmbiguity`, `compressedSymbolTable`.
+  - `APRSPacketLib_coordinates.cpp` — uncompressed `DDMM.hh` ↔ decimal conversion.
+  - `APRSPacketLib_mice.cpp` — Mic-E encode/decode.
+  - `APRSPacketLib_digipeater.cpp` — `generateDigipeatedPacket` and its path helpers.
+  - `APRSPacketLib_decoder.cpp` — `processReceivedPacket`.
+  - `APRSPacketLib_internal.h` — declarations of the internal helpers used across files (not public). New topics (objects, telemetry, weather, third-party) get their own `APRSPacketLib_<topic>.cpp`.
 - Examples are `.ino` sketches in `examples/` — illustrative, not part of any test harness.
 - Note licensing inconsistency: `library.json` says `MIT`, the `LICENSE` file and `README.md` say GPL-3.0. Don't "fix" this without asking.
 
@@ -24,13 +33,13 @@ A PlatformIO Unity test suite lives under `test/`:
 
 To run on host: `pio test -e native`. To run on hardware: `pio test -e test-esp32s3dev`.
 
-There is **no CI** yet — these tests only run when someone invokes `pio test` manually. When asked to "verify" a change, run `pio test -e native` and report the result rather than claiming success blindly. Internal helpers (`decodeBase91Encoded*` etc.) are not in the public header; the test files forward-declare them, which is link-clean because `test_build_src=yes` pulls `src/APRSPacketLib.cpp` into the test binary.
+There is **no CI** yet — these tests only run when someone invokes `pio test` manually. When asked to "verify" a change, run `pio test -e native` and report the result rather than claiming success blindly. Internal helpers (`decodeBase91Encoded*` etc.) are not in the public header; the test files forward-declare them, which is link-clean because `test_build_src=yes` pulls every `src/*.cpp` into the test binary. Keep internal helpers non-`static` for that reason (cross-file ones are declared in `src/APRSPacketLib_internal.h`).
 
 ## Architecture notes (the parts that aren't obvious from one file)
 
 ### Single-namespace, free-function API
 
-All functionality is exposed as free functions in `namespace APRSPacketLib` (declared in `include/APRSPacketLib.h`). There are no classes. Internal helpers (e.g. `applyAmbiguity`, `buildDigiPacket`, `decodeBase91Encoded*`, the Mic-E `encode*`/`decode*` family) live in the same `.cpp` but are not in the header — they are implementation details. When extending the public API, declare in the header *and* keep helpers unexported.
+All functionality is exposed as free functions in `namespace APRSPacketLib` (declared in `include/APRSPacketLib.h`). There are no classes. Internal helpers (e.g. `applyAmbiguity`, `buildDigiPacket`, `decodeBase91Encoded*`, the Mic-E `encode*`/`decode*` family) live in the topic `.cpp` files but are not in the public header — they are implementation details. When extending the public API, declare in `include/APRSPacketLib.h` *and* keep helpers out of it; if a helper is needed from another `.cpp`, declare it in `src/APRSPacketLib_internal.h`.
 
 ### Decoding pipeline
 
